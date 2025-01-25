@@ -5,7 +5,6 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-
 <div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
     <div class="card-header bg-primary text-white" style="text-align: center;">
         <h3> <i class="fas fa-clipboard-list"></i> Editar Prioridades</h3>
@@ -81,7 +80,7 @@
 
     public async Task<bool> Validar()
     {
-        Existe = await tecnicoservice.Existe(tecnicos.TecnicoId);
+        Existe = await tecnicoservice.ExisteporNombres(tecnicos.Nombres);
         return !Existe;
     }
 
