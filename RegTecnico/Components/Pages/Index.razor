@@ -1,0 +1,135 @@
+﻿@page "/Tecnicos/Index"
+@using RegTecnico.Models
+@using RegTecnico
+@using RegTecnico.Services
+@inject TecnicosService tecnicoService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Index</PageTitle>
+
+<div class="shadow-lg">
+    <div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
+        <div class="card-header" style="background-color: #0058ff; text-align: center;">
+            <h3 style="font-weight: bold; margin: 0; color: #ffffff;">Listado de T&eacute;cnicos</h3>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por</strong></label>
+                </div>
+
+                <div class="col-4">
+                    <label class="col-form-label"><strong>B&uacute;squeda</strong></label>
+                </div>
+            </div>
+
+            <div class="row align-items-center">
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" selected disabled>Elija una opci&oacute;n</option>
+                        <option value="Id">Id</option>
+                        <option value="Nombres">Nombre</option>
+                        <option value="SueldoHora">Sueldo/Hora</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <button type="button" class="btn btn-primary" @onclick="PantallaCrear"> Crear</button>
+            </div>
+
+            <table class="table table-bordered text-center mt-4">
+                <thead>
+                    <tr>
+                        <th>ID de Tecnico</th>
+                        <th>Nombres</th>
+                        <th>Sueldo/Hora</th>
+                        <th>Editar</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tecnico in ListaTecnicos)
+                    {
+                        <tr>
+                            <td>@tecnico.TecnicoId</td>
+                            <td>@tecnico.Nombres</td>
+                            <td>@tecnico.SueldoHora</td>
+
+                            <td>
+                                <button type="button" class=" btn btn-outline-primary bi bi-pencil-square" @onclick="() => PantallaEditar(tecnico.TecnicoId)">
+                                </button>
+                            </td>
+
+                            <td>
+                                <button type="button" class="btn btn-outline-danger bi bi-trash" @onclick="() => PantallaEliminar(tecnico.TecnicoId)">
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer">
+            <p><strong>Total de T&eacute;cnicos: </strong>@ListaTecnicos.Count</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Tecnicos> ListaTecnicos { get; set; } = new List<Tecnicos>();
+
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaTecnicos = await tecnicoService.Listar(e => e.TecnicoId > 0);
+    }
+
+    public void PantallaCrear() => navigationManager.NavigateTo("/Tecnicos/Create");
+
+    public void PantallaEditar(int id)
+    {
+        navigationManager.NavigateTo($"/Tecnicos/Edit/{id}");
+    }
+
+    public void PantallaEliminar(int id)
+    {
+        navigationManager.NavigateTo($"/Tecnicos/Delete/{id}");
+    }
+
+    private async Task Buscar()
+    {
+        if (ValorFiltro.Trim() != "")
+        {
+            if (Filtro == "Id" && int.TryParse(ValorFiltro, out int tecniCold))
+                ListaTecnicos = await tecnicoService.Listar(e => e.TecnicoId == tecniCold);
+            else if (Filtro == "Nombres")
+                ListaTecnicos = await tecnicoService.Listar(e => e.Nombres.ToLower().Contains(ValorFiltro.ToLower()));
+            else if (Filtro == "SueldoHora" && double.TryParse(ValorFiltro, out double sueldoHora))
+            {
+                ListaTecnicos = await tecnicoService.Listar(e => e.SueldoHora == (decimal)sueldoHora);
+            }
+        }
+        else
+        {
+            ListaTecnicos = await tecnicoService.Listar(e => e.TecnicoId > 0);
+        }
+    }
+
+    private async Task Restablecer()
+    {
+        ListaTecnicos = await tecnicoService.Listar(e => e.TecnicoId > 0);
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+    }
+}
