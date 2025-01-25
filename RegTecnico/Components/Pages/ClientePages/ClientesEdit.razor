@@ -1,0 +1,146 @@
+﻿@page "/Clientes/Edit/{ClienteId:int}"
+@inject ClienteService clienteService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
+    <div class="card-header bg-primary text-white" style="text-align: center;">
+        <h3> <i class="fas fa-clipboard-list"></i> Editar Cliente</h3>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="ClienteId" class="form-label">ID Cliente:</label>
+                <div class="input-group">
+                    <div style="width: 40%; height: 1em;">
+                        <InputNumber @bind-Value="cliente.ClienteId" class="form-control" style="font-size: 0.8em;" aria-describedby="BotonBuscar" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="Nombres" class="form-label">Nombres:</label>
+            <InputText @bind-Value="cliente.Nombres" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label for="Direccion" class="form-label">Dirección:</label>
+            <InputText @bind-Value="cliente.Direccion" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label for="RNC" class="form-label">RNC:</label>
+            <InputText @bind-Value="cliente.RNC" class="form-control" maxlength="11" @oninput="ValidarRNC" />
+            @if (!string.IsNullOrEmpty(RncErrorMessage))
+            {
+                <div class="alert alert-danger mt-3">
+                    @RncErrorMessage
+                </div>
+            }
+        </div>
+
+        <div class="mb-3">
+            <label for="LimiteCredito" class="form-label">Límite de Crédito:</label>
+            <InputNumber @bind-Value="cliente.LimiteCredito" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label for="TecnicoId" class="form-label">Técnico:</label>
+            <InputNumber @bind-Value="cliente.TecnicoId" class="form-control" />
+        </div>
+
+    </div>
+
+    <div class="card-footer bg-light d-flex justify-content-center mt-3">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary ml-2" @onclick="Nuevo"><span class="bi bi-plus"></span> Nuevo </button>
+            <button type="button" class="btn btn-outline-success ml-2" @onclick="Guardar"><span class="bi bi-check-circle-fill"></span> Guardar </button>
+            <a type="button" href="/Clientes/Index" class="btn btn-outline-danger"><span class="bi bi-arrow-bar-left"></span> Retroceder </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? ClienteId { get; set; }
+    public Clientes cliente { get; set; } = new Clientes();
+    private string RncErrorMessage { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ClienteId.HasValue)
+        {
+            cliente.ClienteId = ClienteId.Value;
+            await Buscar();
+        }
+    }
+
+    public void Nuevo()
+    {
+        cliente = new Clientes();
+    }
+
+    public async Task Buscar()
+    {
+        var clienteEncontrado = await clienteService.Buscar(cliente.ClienteId);
+
+        if (clienteEncontrado != null)
+        {
+            cliente = clienteEncontrado;
+        }
+    }
+
+    public async Task<bool> ValidarRNC()
+    {
+
+        if (!cliente.RNC.All(char.IsDigit))
+        {
+            RncErrorMessage = "El RNC solo puede contener números.";
+            return false;
+        }
+
+        if (cliente.RNC.Length != 9)
+        {
+            RncErrorMessage = "El RNC debe tener exactamente 9 caracteres.";
+            return false;
+        }
+
+
+        var clienteExistente = await clienteService.ObtenerClientePorRnc(cliente.RNC);
+        if (clienteExistente != null && clienteExistente.ClienteId != cliente.ClienteId)
+        {
+            RncErrorMessage = "Ya existe un cliente con este RNC.";
+            return false;
+        }
+
+        RncErrorMessage = string.Empty;
+        return true;
+    }
+
+    public async Task Guardar()
+    {
+        var esValido = await ValidarRNC();
+        if (esValido)
+        {
+            var guardo = await clienteService.Modificar(cliente);
+            if (guardo)
+            {
+                Nuevo();
+                navigationManager.NavigateTo("/Clientes/Index");
+            }
+        }
+    }
+
+    public async Task Eliminar()
+    {
+        var eliminado = await clienteService.Eliminar(cliente.ClienteId);
+        if (eliminado)
+        {
+            Nuevo();
+            navigationManager.NavigateTo("/Clientes/Index");
+        }
+    }
+}
