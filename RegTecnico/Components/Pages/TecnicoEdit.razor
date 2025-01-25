@@ -1,0 +1,104 @@
+﻿@page "/Tecnicos/Edit/{TecnicoId:int}"
+@using RegTecnico.Models
+@using RegTecnico.Services
+@inject TecnicosService tecnicoservice
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+
+<div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
+    <div class="card-header bg-primary text-white" style="text-align: center;">
+        <h3> <i class="fas fa-clipboard-list"></i> Editar Prioridades</h3>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label for="PrioridadId" class="form-label">TecnicoId:</label>
+                <div class="input-group">
+                    <div style="width: 40%; height: 1em;">
+                        <InputNumber @bind-Value="tecnicos.TecnicoId" class="form-control" style="font-size: 0.8em;" aria-describedby="BotonBuscar" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="Descripcion" class="form-label">Sueldo por hora:</label>
+            <InputNumber @bind-Value="tecnicos.SueldoHora" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label for="DiasCompromiso" class="form-label">Nombre:</label>
+            <InputText @bind-Value="tecnicos.Nombres" class="form-control" />
+        </div>
+
+    </div>
+
+    <div class="card-footer bg-light d-flex justify-content-center mt-3">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary ml-2" @onclick="Nuevo"><span class="bi bi-plus"></span> Nuevo </button>
+            <button type="button" class="btn btn-outline-success ml-2" @onclick="Guardar"><span class="bi bi-check-circle-fill"></span> Guardar </button>
+            <a type="button" href="/Tecnicos/Index" class="btn btn-outline-danger"><span class="bi bi-arrow-bar-left"></span> Retroceder </a>
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public int? TecnicoId { get; set; }
+    public Tecnicos tecnicos { get; set; } = new Tecnicos();
+    private bool Existe = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (TecnicoId.HasValue)
+        {
+            tecnicos.TecnicoId = TecnicoId.Value;
+            await Buscar();
+        }
+    }
+
+    public void Nuevo()
+    {
+        tecnicos = new Tecnicos();
+        Existe = false;
+    }
+
+    public async Task Buscar()
+    {
+        var prioridadEncontrada = await tecnicoservice.Buscar(tecnicos.TecnicoId);
+
+        if (prioridadEncontrada != null)
+        {
+            tecnicos = prioridadEncontrada;
+        }
+    }
+
+    public async Task<bool> Validar()
+    {
+        Existe = await tecnicoservice.Existe(tecnicos.TecnicoId);
+        return !Existe;
+    }
+
+    public async Task Guardar()
+    {
+
+
+        var guardo = await tecnicoservice.Modificar(tecnicos);
+        if (guardo)
+        {
+            Nuevo();
+        }
+    }
+
+    public async Task Eliminar()
+    {
+        var eliminado = await tecnicoservice.Eliminar(tecnicos.TecnicoId);
+        Nuevo();
+    }
+}
