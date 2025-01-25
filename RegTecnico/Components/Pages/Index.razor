@@ -61,7 +61,7 @@
                         <tr>
                             <td>@tecnico.TecnicoId</td>
                             <td>@tecnico.Nombres</td>
-                            <td>@tecnico.SueldoHora</td>
+                            <td>@($"{tecnico.SueldoHora:N2}")</td>
 
                             <td>
                                 <button type="button" class="btn btn-primary bi bi-pencil-square" @onclick="() => PantallaEditar(tecnico.TecnicoId)"></button>
