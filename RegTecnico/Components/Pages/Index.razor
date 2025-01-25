@@ -64,13 +64,10 @@
                             <td>@tecnico.SueldoHora</td>
 
                             <td>
-                                <button type="button" class=" btn btn-outline-primary bi bi-pencil-square" @onclick="() => PantallaEditar(tecnico.TecnicoId)">
-                                </button>
+                                <button type="button" class="btn btn-primary bi bi-pencil-square" @onclick="() => PantallaEditar(tecnico.TecnicoId)"></button>
                             </td>
-
                             <td>
-                                <button type="button" class="btn btn-outline-danger bi bi-trash" @onclick="() => PantallaEliminar(tecnico.TecnicoId)">
-                                </button>
+                                <button type="button" class="btn btn-danger bi bi-trash" @onclick="() => PantallaEliminar(tecnico.TecnicoId)"></button>
                             </td>
                         </tr>
                     }
