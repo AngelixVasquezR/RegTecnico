@@ -1,0 +1,108 @@
+﻿@page "/Tecnicos/Create"
+@using RegTecnico.Models
+@using RegTecnico.Services
+@inject TecnicosService tecnicoService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
+    <div class="card-header bg-primary text-white" style="text-align: center;">
+        <h3> <i class="fas fa-clipboard-list"></i> Registro Tecnico</h3>
+    </div>
+
+    <div class="card-body">
+        @* tecnicoID *@
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="tecnicoID" class="form-label">ID del Tecnico:</label>
+                <div class="input-group">
+                    <div style="width: 40%; height: 1em;">
+                        <InputNumber @bind-Value="tecnico.TecnicoId" class="form-control" style="font-size: 0.8em;" aria-describedby="BotonBuscar" ReadOnly />
+                    </div>
+                </div>
+            </div>
+        </div>
+        @* sueldo por hora *@
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="tecnicoID" class="form-label">Sueldo por hora <meta name="viewport" content="width=device-width" />:</label>
+                <div class="input-group">
+                    <div style="width: 40%; height: 1em;">
+                        <InputNumber @bind-Value="tecnico.SueldoHora" class="form-control" style="font-size: 0.8em;" aria-describedby="BotonBuscar" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Nombre *@
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre del tecnico:</label>
+            <InputText @bind-Value="tecnico.Nombres" class="form-control" />
+        </div>
+
+    </div>
+
+    <div class="card-footer bg-light d-flex justify-content-center mt-3">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary ml-2" @onclick="Nuevo"><span class="bi bi-plus"></span> Nuevo </button>
+            <button type="submit" class="btn btn-outline-success ml-2" @onclick="Guardar"><span class="bi bi-check-circle-fill"></span> Guardar </button>
+            <a type="button" href="/Tecnicos/Index" class="btn btn-outline-danger"><span class="bi bi-arrow-bar-left"></span> Retroceder </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int tecnicoID { get; set; }
+
+    public Tecnicos tecnico { get; set; } = new Tecnicos();
+    private bool Existe = false;
+
+    public void Nuevo()
+    {
+        tecnico = new Tecnicos();
+        Existe = false;
+    }
+
+    public async Task Buscar()
+    {
+        Existe = false;
+        var tecnicoEncontrado = await tecnicoService.Buscar(tecnico.TecnicoId);
+
+        if (tecnicoEncontrado != null)
+        {
+            tecnico = tecnicoEncontrado;
+        }
+        else
+        {
+            Nuevo();
+        }
+    }
+
+    public async Task<bool> Validar()
+    {
+        Existe = await tecnicoService.Existe(tecnicoID);
+        return !Existe;
+    }
+
+    public async Task Guardar()
+    {
+        if (!await Validar())
+        {
+            return;
+        }
+
+        var guardo = await tecnicoService.Guardar(tecnico);
+        if (guardo)
+        {
+            Nuevo();
+        }
+    }
+
+    public async Task Eliminar()
+    {
+        var eliminado = await tecnicoService.Eliminar(tecnico.TecnicoId);
+        Nuevo();
+    }
+
+}
