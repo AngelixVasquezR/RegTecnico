@@ -1,0 +1,187 @@
+﻿
+@page "/Clientes/Create"
+@inject ClienteService clienteService
+@inject TecnicosService tecnicoService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
+    <div class="card-header bg-primary text-white" style="text-align: center;">
+        <h3> <i class="fas fa-users"></i> Registro de Clientes</h3>
+    </div>
+
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            <div class="alert @(mensaje.StartsWith("Error") ? "alert-danger" : "alert-success")">
+                @mensaje
+            </div>
+        }
+
+        @* ClienteID *@
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="clienteID" class="form-label">ID del Cliente:</label>
+                <div class="input-group">
+                    <div style="width: 40%; height: 1em;">
+                        <InputNumber @bind-Value="cliente.ClienteId" class="form-control" style="font-size: 0.8em;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Fecha Ingreso *@
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="fechaIngreso" class="form-label">Fecha de Ingreso:</label>
+                <InputDate @bind-Value="cliente.FechaIngreso" class="form-control" />
+            </div>
+        </div>
+
+        @* Nombre *@
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre del Cliente:</label>
+            <InputText @bind-Value="cliente.Nombres" class="form-control" />
+        </div>
+
+        @* Dirección *@
+        <div class="mb-3">
+            <label for="direccion" class="form-label">Dirección:</label>
+            <InputText @bind-Value="cliente.Direccion" class="form-control" />
+        </div>
+
+        @* RNC *@
+        <div class="mb-3">
+            <label for="rnc" class="form-label">RNC:</label>
+            <InputText @bind-Value="cliente.RNC" class="form-control" />
+        </div>
+
+        @* Límite de Crédito *@
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="limiteCredito" class="form-label">Límite de Crédito:</label>
+                <InputNumber @bind-Value="cliente.LimiteCredito" class="form-control" />
+            </div>
+        </div>
+
+        @* Técnico Encargado *@
+        <div class="mb-3">
+            <label for="tecnicoId" class="form-label">Técnico Encargado:</label>
+            <InputSelect @bind-Value="cliente.TecnicoId" class="form-control">
+                <option value="">Seleccione un técnico</option>
+                @foreach (var tecnico in tecnicos)
+                {
+                    <option value="@tecnico.TecnicoId">@tecnico.Nombres</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="card-footer bg-light d-flex justify-content-center mt-3">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary ml-2" @onclick="Nuevo"><span class="bi bi-plus"></span> Nuevo </button>
+            <button type="submit" class="btn btn-outline-success ml-2" @onclick="Guardar"><span class="bi bi-check-circle-fill"></span> Guardar </button>
+            <a type="button" href="/Clientes/Index" class="btn btn-outline-danger"><span class="bi bi-arrow-bar-left"></span> Retroceder </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    public Clientes cliente { get; set; } = new Clientes();
+    private List<Tecnicos> tecnicos = new List<Tecnicos>();
+    private bool Existe = false;
+    private string mensaje = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        tecnicos = await tecnicoService.ObtenerLista();
+    }
+
+    public void Nuevo()
+    {
+        cliente = new Clientes();
+        Existe = false;
+        mensaje = string.Empty;
+    }
+
+    public async Task Buscar()
+    {
+        Existe = false;
+        var clienteEncontrado = await clienteService.Buscar(cliente.ClienteId);
+
+        if (clienteEncontrado != null)
+        {
+            cliente = clienteEncontrado;
+        }
+        else
+        {
+            Nuevo();
+        }
+    }
+
+    public async Task<bool> Validar()
+    {
+        mensaje = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(cliente.Nombres) || string.IsNullOrWhiteSpace(cliente.RNC) || cliente.TecnicoId == 0 || cliente.LimiteCredito <= 0)
+        {
+            mensaje = "Todos los campos son obligatorios!.";
+            return false;
+        }
+
+        if (cliente.RNC.Length > 9)
+        {
+            mensaje = "El RNC no puede tener más de 9 caracteres!.";
+            return false;
+        }
+
+        Existe = await clienteService.ExistePorNombre(cliente.Nombres);
+        if (Existe)
+        {
+            mensaje = "Ya existe un cliente con ese mismo nombre.";
+            return false;
+        }
+
+        Existe = await clienteService.ExistePorRnc(cliente.RNC);
+        if (Existe)
+        {
+            mensaje = "Ya existe un cliente con con ese RNC.";
+            return false;
+        }
+
+        return true;
+    }
+
+    public async Task Guardar()
+    {
+        if (!await Validar())
+        {
+            return;
+        }
+
+        var guardo = await clienteService.Guardar(cliente);
+        if (guardo)
+        {
+            mensaje = "Cliente creado exitosamente!.";
+            Nuevo();
+        }
+        else
+        {
+            mensaje = "Problema al guardar el cliente.";
+        }
+    }
+
+    public async Task Eliminar()
+    {
+        var eliminado = await clienteService.Eliminar(cliente.ClienteId);
+        if (eliminado)
+        {
+            mensaje = "Cliente eliminado correctamente!.";
+        }
+        else
+        {
+            mensaje = "Error al eliminar el cliente!.";
+        }
+        Nuevo();
+    }
+}
